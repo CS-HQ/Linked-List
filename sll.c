@@ -1,177 +1,138 @@
-#include <stdio.h> // provide defn for func printf, scanf
-#include <stdlib.h> // provide defn for func malloc, free, exit
+#include<stdio.h>
+#include<stdlib.h>
+#define NDEBUG
+#include <assert.h>
 
-// Define the Node structure - Declaration
+assert(newnode != NULL);
 struct node {
-    int data;  // part storing the data
-    struct node *next; // part storing the address of next node // *next -> because next is a pointe of struct node type
+    int data;
+    struct node * next;
 };
 
-// HELPER FUNCTION: Centralized node creation and error checking
-struct node* create_node(int data) {
-    struct node *newNode = (struct node *)malloc(sizeof(struct node));
-    if (newNode == NULL) {
-        printf("Error: Out of memory!\n");
-        exit(1); 
-    }
-    newNode->data = data;
-    newNode->next = NULL; // Initialization
-    return newNode;
+void add_at_beg(struct node **head_ref, int data){
+    struct node *newnode;
+     
+    newnode=malloc(sizeof(struct node));
+    newnode->data=data;
+    newnode->next=*head_ref;
+    *head_ref=newnode;
 }
 
-// Creation logic using the helper
-void create_list(struct node **head_ref) {
-    struct node *newNode, *temp; // Definition
-    int choice = 1, data;
+void add_at_end(struct node ** head_ref, int data){
+    struct node *newnode;
+    newnode=malloc(sizeof(struct node));
 
-    while (choice) {
-        printf("Enter data: ");
-        scanf("%d", &data);
-        
-        newNode = create_node(data); // Using helper
-
-        if (*head_ref == NULL) {
-            *head_ref = temp = newNode;
-        } else {
-            temp->next = newNode;
-            temp = newNode;
-        }
-
-        printf("Do you want to continue (0, 1)? ");
-        scanf("%d", &choice);
+    struct node * temp=* head_ref;// review difference b/w head_ref, *head_ref and **head_ref in this line
+    while(temp->next!=NULL){
+        temp=temp->next;
     }
+    newnode->data=data;
+    newnode->next=NULL;
+    temp->next=newnode;
 }
 
-// 1. Add at Front
-void add_at_front(struct node **head_ref, int data) {
-    struct node *newNode = create_node(data); // Using helper
-    newNode->next = *head_ref;
-    *head_ref = newNode;
+void add_at_pos(struct node ** head_ref, int data, int pos){
+    struct node * temp= * head_ref;
+    int count=1;
+    while(count!=pos-1){
+         temp=temp->next;
+         count++;
+    }
+    struct node * newnode;
+    newnode=malloc(sizeof(struct node));
+    newnode->data=data;
+    newnode->next=temp->next;
+    temp->next=newnode;
+  
 }
 
-// 2. Add at Last
-void add_at_last(struct node **head_ref, int data) {
-    struct node *newNode = create_node(data); // Using helper
+void reverse(struct node **head_ref){
+    struct node * previous, *current, *nextnode;
 
-    if (*head_ref == NULL) {
-        *head_ref = newNode;
-        return;
-    }
-
-    struct node *temp = *head_ref;
-    while (temp->next != NULL) {
-        temp = temp->next;
-    }
-    temp->next = newNode;
+    current = *head_ref;
+    previous=current;
+    current=current->next;
+    nextnode=current->next;
+    previous->next=NULL;
+ while(nextnode->next!=NULL){
+    current->next=previous;
+    previous=current;
+    current=nextnode;
+    nextnode=nextnode->next;
+ }
+ current->next=previous;
+ nextnode->next=current;
+ *head_ref = nextnode;
 }
 
-// 3. Add at Position
-void add_at_pos(struct node **head_ref, int data, int pos) {
-    if (pos == 1) {
-        add_at_front(head_ref, data);
-        return;
-    }
-
-    struct node *temp = *head_ref;
-    for (int i = 1; i < pos - 1 && temp != NULL; i++) {
-        temp = temp->next;
-    }
-
-    if (temp == NULL) {
-        printf("Position %d is out of bounds!\n", pos);
-    } else {
-        struct node *newNode = create_node(data); // Using helper
-        newNode->next = temp->next;
-        temp->next = newNode;
-    }
-}
-
-// 4. Display Function
-void display(struct node *head) {
-    struct node *temp = head;
-    if (head == NULL) {
-        printf("List is empty.\n");
-        return;
-    }
-    while (temp != NULL) {
-        printf("[%d] -> ", temp->data);
-        temp = temp->next;
-    }
-    printf("NULL\n");
-}
-
-// Deletion functions remain the same as they use free(), not malloc()
-void delete_front(struct node **head_ref) {
-    if (*head_ref == NULL) {
-        printf("List is already empty.\n");
-        return;
-    }
-    struct node *temp = *head_ref;
-    *head_ref = (*head_ref)->next;
+void delete_from_beg(struct node **head){
+    struct node * temp=*head;
+    *head=temp->next;
     free(temp);
-    printf("Front node deleted.\n");
 }
 
-void delete_last(struct node **head_ref) {
-    if (*head_ref == NULL) return;
-    struct node *temp = *head_ref;
-    if (temp->next == NULL) {
-        free(temp);
-        *head_ref = NULL;
-        return;
+void delete_from_end(struct node **head){
+    struct node * temp=*head;
+    while(temp->next->next!=NULL){
+        temp=temp->next;
     }
-    while (temp->next->next != NULL) temp = temp->next;
-    free(temp->next);
-    temp->next = NULL;
-    printf("Last node deleted.\n");
+    struct node * temp1= temp->next->next;
+    temp->next=NULL;
+    free(temp1);
+   
 }
 
-void delete_at_pos(struct node **head_ref, int pos) {
-    if (*head_ref == NULL) return;
-    if (pos == 1) {
-        delete_front(head_ref);
-        return;
+void delete_pos(struct node **head, int pos){
+    struct node * temp = * head;
+    int count =1;
+    while(count !=pos-1){
+        temp=temp->next;
+        count++;
     }
-    struct node *temp = *head_ref;
-    for (int i = 1; i < pos - 1 && temp != NULL; i++) temp = temp->next;
-    if (temp == NULL || temp->next == NULL) {
-        printf("Position %d out of bounds.\n", pos);
-        return;
-    }
-    struct node *nodeToDelete = temp->next;
-    temp->next = temp->next->next;
-    free(nodeToDelete);
-    printf("Node at position %d deleted.\n", pos);
+
+    struct node * temp1= temp->next;
+    temp->next= temp->next->next;
+    free(temp1);
 }
 
-// Cleanup Function
-void free_list(struct node **head_ref) {
-    struct node *current = *head_ref;
-    struct node *next;
-    while (current != NULL) {
-        next = current->next;
-        free(current);
-        current = next;
+    void display(struct node * head){
+        struct node * temp= head; // review why *head needed wny not head
+        while(temp!=NULL){
+            printf("[%d]-> ",temp->data);
+            temp=temp->next;
+        }
+        printf("NULL\n");
     }
-    *head_ref = NULL;
-    printf("All memory cleared.\n");
-}
+ void menu(){
+    printf("Actions: \n");
+    printf("1. Add A Node \n");
+    printf("2. Delete A Node \n");
 
-int main() {
-    struct node *head = NULL; 
+ }
+
+
+int main(){
+    struct node * head = NULL;
+    int choice;
+    while(1){
+        printf("Actions: \n");
+    }
+
     
-    create_list(&head);
-    add_at_front(&head, 10);
-    add_at_last(&head, 30);
-    add_at_pos(&head, 20, 2);
-    
+    add_at_beg(&head,0);
+    add_at_end(&head, 4);
+    //add_at_pos(&head, 10,4);
     display(head);
-    
-    delete_front(&head);
-    delete_last(&head);
-    
+    reverse(&head);// should we use &head or just head here
     display(head);
-    
-    free_list(&head);
+    delete_from_beg(&head);
+    display(head);
+    delete_from_end(&head);
+    display(head);
+    delete_pos(&head,2);
+    display(head);
+
     return 0;
+
+
 }
